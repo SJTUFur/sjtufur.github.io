@@ -6,41 +6,27 @@
 
 ### 1. 修改 Hugo 地址
 
-打开 `hugo/config.toml`，把示例地址改成实际的 GitHub Pages 地址：
+组织网站已经配置完成，地址为 **https://sjtufur.github.io/**，维护仓库为 [SJTUFur/sjtufur.github.io](https://github.com/SJTUFur/sjtufur.github.io)。
+
+`hugo/config.toml` 使用组织根地址，无需追加仓库名：
 
 ```toml
-baseURL = "https://你的用户名.github.io/你的仓库名/"
-```
-
-例如：
-
-```toml
-baseURL = "https://sjtu-furry.github.io/sjtu-furry-site/"
+baseURL = "https://sjtufur.github.io/"
 ```
 
 ### 2. 在 GitHub 开启 Pages
 
-1. 把网站目录上传到 GitHub 仓库的 `main` 分支。
+1. 在组织仓库 `SJTUFur/sjtufur.github.io` 中维护网站。
 2. 打开仓库的 `Settings` → `Pages`。
 3. 在 `Build and deployment` → `Source` 中选择 `GitHub Actions`。
 4. 打开仓库的 `Actions` 页面，等待 `Build and deploy GitHub Pages` 变成绿色。
-5. 访问 `https://你的用户名.github.io/你的仓库名/`。
+5. 访问 `https://sjtufur.github.io/`。此流程同时发布静态页面、活动文章和文章图片。
 
-如果还没有推送过本地目录，可以在网站目录打开 PowerShell：
-
-```powershell
-git init -b main
-git remote add origin https://github.com/你的用户名/你的仓库名.git
-git add .
-git commit -m "初始化社团网站"
-git push -u origin main
-```
-
-如果 `git init -b main` 不支持，使用：
+首次获取组织仓库，可以在 PowerShell 执行：
 
 ```powershell
-git init
-git branch -M main
+git clone https://github.com/SJTUFur/sjtufur.github.io.git
+cd sjtufur.github.io
 ```
 
 ## 新增一篇活动动态
