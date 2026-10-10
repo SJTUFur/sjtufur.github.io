@@ -1,6 +1,10 @@
 # 东川路800号荣毛社主页
 
-这是一个可直接部署到 GitHub Pages 的纯静态多页面网站框架，不需要安装依赖或执行构建命令。页面中的资料目前以占位内容为主，每个主要填写区都附有 HTML 注释。
+组织网站：**https://sjtufur.github.io/**
+
+维护仓库：[SJTUFur/sjtufur.github.io](https://github.com/SJTUFur/sjtufur.github.io)。本项目从 [Rappy325/sjtufur_page](https://github.com/Rappy325/sjtufur_page) 迁入，保留原有提交历史、页面和素材。
+
+这是一个静态多页面网站，活动动态由 Hugo 0.147.0 构建。GitHub Actions 会完成构建和发布，无需在本机安装 Node.js 依赖。
 
 ## 文件结构
 
@@ -63,9 +67,9 @@
 
 ## GitHub Pages 部署
 
-1. 将本目录提交到 GitHub 仓库，并把 `hugo/config.toml` 中的 `baseURL` 改成你的 GitHub Pages 地址。
-2. 在仓库 `Settings → Pages` 的发布来源选择 `GitHub Actions`。
-3. 以后新增或修改 `hugo/content/announcements/` 下的 `.md` 文件，通过 Pull Request 合并到 `main` 后，Action 会自动构建和发布。
+1. 组织仓库为 `SJTUFur/sjtufur.github.io`，`hugo/config.toml` 的 `baseURL` 为 `https://sjtufur.github.io/`。
+2. 仓库 `Settings → Pages` 的发布来源使用 `GitHub Actions`。唯一部署流程为 `.github/workflows/hugo-pages.yml`，同时发布静态页面和活动动态。
+3. 以后新增或修改 `hugo/content/announcements/` 下的 `.md` 文件，通过 Pull Request 合并到 `main` 后，Action 会自动构建和发布。需要重新发布时，也可在 `Actions → Build and deploy GitHub Pages → Run workflow` 手动触发。
 
 ### 新增一篇活动动态
 
