@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local-only editing service. No third-party dependencies or production backend."""
 import argparse
+import errno
 import hashlib
 import json
 import os
@@ -46,6 +47,19 @@ class EditorHandler(SimpleHTTPRequestHandler):
             self.json_response(403, {"error": "仅允许本机同源访问。"})
             return
         path = urlsplit(self.path).path
+        editor_routes = {
+            "/": "/tools/editors.html",
+            "/editors.html": "/tools/editors.html",
+            "/members-editor.html": "/tools/members-editor.html",
+            "/media-editor.html": "/tools/media-editor.html",
+        }
+        if path in editor_routes:
+            # Redirect the browser as well: an internal rewrite leaves relative links at /.
+            self.send_response(302)
+            self.send_header("Location", editor_routes[path])
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
         if path == "/__editor/session":
             self.json_response(200, {"token": self.server.editor_token})
             return
@@ -59,8 +73,6 @@ class EditorHandler(SimpleHTTPRequestHandler):
         if any(part.startswith(".") for part in relative.parts):
             self.send_error(403)
             return
-        if path == "/":
-            self.path = "/tools/editors.html"
         super().do_GET()
 
     def list_directory(self, path):
@@ -122,11 +134,13 @@ class EditorHandler(SimpleHTTPRequestHandler):
             raise ValueError("图片只能保存到 gallery 或 people 目录。")
         suffix = Path(name).suffix.lower()
         valid = ((suffix == ".png" and body.startswith(b"\x89PNG\r\n\x1a\n")) or
-                 (suffix in {".jpg", ".jpeg"} and body.startswith(b"\xff\xd8\xff")) or
+                 (suffix in {".jpg", ".jpeg", ".jfif"} and body.startswith(b"\xff\xd8\xff")) or
                  (suffix == ".gif" and body.startswith((b"GIF87a", b"GIF89a"))) or
                  (suffix == ".webp" and body.startswith(b"RIFF") and body[8:12] == b"WEBP"))
         if not valid:
-            raise ValueError("请选择 PNG、JPG、GIF 或 WebP 图片。")
+            raise ValueError("请选择 PNG、JPG、JFIF、GIF 或 WebP 图片。")
+        if suffix == ".jfif":
+            suffix = ".jpg"
         stem = re.sub(r"[^\w-]", "-", Path(name).stem)[:50] or "image"
         filename = f"{stem}-{hashlib.sha256(body).hexdigest()[:12]}{suffix}"
         folder = self.server.editor_root / "assets/images" / image_folder
@@ -149,16 +163,29 @@ def create_server(root, port=8765):
     return server
 
 
+def create_available_server(root, port=8765):
+    for candidate in range(port, min(port + 20, 65536)):
+        try:
+            return create_server(root, candidate)
+        except OSError as error:
+            if error.errno != errno.EADDRINUSE:
+                raise
+    raise OSError("附近的本地端口均被占用，请关闭一个旧编辑工具窗口后重试。")
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SJTUfur 本地编辑工具")
     parser.add_argument("--port", type=int, default=8765)
     parser.add_argument("--open", action="store_true", help="在默认浏览器中打开工具入口")
     args = parser.parse_args()
-    server = create_server(Path(__file__).resolve().parent.parent, args.port)
-    print(f"本地编辑工具：http://127.0.0.1:{server.server_port}/", flush=True)
+    server = create_available_server(Path(__file__).resolve().parent.parent, args.port)
+    if args.port and server.server_port != args.port:
+        print(f"端口 {args.port} 已被占用，已改用 {server.server_port}。", flush=True)
+    editor_url = f"http://127.0.0.1:{server.server_port}/tools/editors.html"
+    print(f"本地编辑工具：{editor_url}", flush=True)
     print("应用会保存本地资料文件；线上网站仍按原来的 PR 流程发布。Ctrl+C 结束。", flush=True)
     if args.open:
-        webbrowser.open(f"http://127.0.0.1:{server.server_port}/")
+        webbrowser.open(editor_url)
     try:
         server.serve_forever()
     except KeyboardInterrupt:

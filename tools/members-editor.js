@@ -268,6 +268,7 @@
   });
 
   function previewExcel() {
+    document.querySelector("#excel-error").hidden = true;
     const sheet = excelSheets[Number(excelSheet.value)];
     const table = document.querySelector("#excel-preview-list");
     const issues = document.querySelector("#excel-issues-list");
@@ -321,7 +322,7 @@
       document.querySelector("#excel-issues").open = result.errors.length > 0;
       document.querySelector("#excel-issues-title").textContent = `查看未导入记录与提示（${omitted.length + sheet.imageWarnings.length}）`;
       const note = result.imageCount
-        ? excelAvatars.checked ? `将导入 ${result.imageCount} 张内嵌头像，需要通过本地编辑服务打开工具。` : "已关闭头像导入，将保留原有头像。"
+        ? excelAvatars.checked ? `将保存 ${result.imageCount} 张头像（含补充附件）。直接打开文件时，需选择一次网站工程文件夹；也支持本地编辑服务。` : "已关闭头像导入，将保留原有头像。"
         : "没有可导入的内嵌头像，将保留原有头像；新成员使用默认图片。";
       document.querySelector("#excel-avatar-note").textContent = note + (result.avatarCount > result.imageCount ? " 附件名称和外部图片链接不会自动下载，请通过“更多”手动设置。" : "");
       excelApply.disabled = result.entries.length === 0;
@@ -355,6 +356,7 @@
       excelExisting = existing;
       excelUpdate.checked = false;
       excelAvatars.checked = true;
+      document.querySelector("#excel-attachment-status").textContent = "Excel 中缺失的头像可从导出目录的“附件”或“图片”文件夹补充，按提交者或昵称自动匹配。";
       excelSheet.replaceChildren();
       sheets.forEach((sheet, index) => {
         const option = document.createElement("option");
@@ -373,6 +375,27 @@
     }
   });
   excelSheet.addEventListener("change", previewExcel);
+  document.querySelector("#excel-add-attachments").addEventListener("click", () => document.querySelector("#excel-attachment-files").click());
+  document.querySelector("#excel-attachment-files").addEventListener("change", async (event) => {
+    const files = Array.from(event.target.files);
+    if (!files.length) return;
+    const attachmentStatus = document.querySelector("#excel-attachment-status");
+    excelBusy = true;
+    excelDialog.querySelectorAll("button, input, select").forEach((input) => { input.disabled = true; });
+    attachmentStatus.textContent = "正在匹配头像附件…";
+    try {
+      const result = await window.MemberExcelImport.attachImages(excelSheets, files);
+      previewExcel();
+      attachmentStatus.textContent = `已补充 ${result.attached} 张头像。` + (result.unmatched.length ? ` ${result.unmatched.length} 个文件没有匹配到待补充头像，可能已补充或昵称不唯一；请保留腾讯导出的文件名（提交者_时间_文件名）。` : "") + result.errors.join(" ");
+    } catch (error) {
+      attachmentStatus.textContent = `补充失败：${error.message}`;
+    } finally {
+      excelBusy = false;
+      excelDialog.querySelectorAll("button, input, select").forEach((input) => { input.disabled = false; });
+      excelApply.disabled = !excelResult?.entries.length;
+      event.target.value = "";
+    }
+  });
   excelUpdate.addEventListener("change", previewExcel);
   excelAvatars.addEventListener("change", previewExcel);
   excelDialog.addEventListener("cancel", (event) => { if (excelBusy) event.preventDefault(); });
@@ -384,6 +407,8 @@
     excelBusy = true;
     excelDialog.querySelectorAll("button, input, select").forEach((input) => { input.disabled = true; });
     const result = excelResult;
+    const errorBox = document.querySelector("#excel-error");
+    errorBox.hidden = true;
     try {
       // Stage all uploads before touching the editor's list, so failures keep the current list intact.
       const staged = { entries: result.entries.map((entry) => ({ ...entry, member: { ...entry.member } })) };
@@ -399,7 +424,11 @@
       message(`已新增 ${result.members.length} 人、更新 ${result.updates.length} 人。检查预览后点击“应用到工程”保存成员资料。`);
       excelDialog.close();
     } catch (error) {
-      document.querySelector("#excel-summary").textContent = `导入未完成：${error.message} 当前成员资料未改变。也可取消勾选“导入内嵌头像”后重试。`;
+      errorBox.textContent = error.name === "AbortError"
+        ? "已取消选择工程文件夹，成员资料未改变。点击“选择工程文件夹”后可重试；也可取消勾选“导入内嵌头像”，只导入文字资料。"
+        : `导入未完成：${error.message} 当前成员资料未改变。也可取消勾选“导入内嵌头像”后重试。`;
+      errorBox.hidden = false;
+      errorBox.scrollIntoView({ block: "nearest" });
     } finally {
       excelBusy = false;
       excelDialog.querySelectorAll("button, input, select").forEach((input) => { input.disabled = false; });

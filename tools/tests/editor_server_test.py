@@ -5,9 +5,11 @@ import json
 import tempfile
 import threading
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
+from urllib.parse import urljoin
 
 spec = importlib.util.spec_from_file_location("editor_server", Path(__file__).resolve().parents[1] / "editor_server.py")
 module = importlib.util.module_from_spec(spec)
@@ -66,6 +68,12 @@ class EditorServerTest(unittest.TestCase):
         person = self.post("/__editor/image?name=avatar.png&folder=people", image)
         self.assertTrue(person["path"].startswith("assets/images/people/"))
         self.assertEqual((self.root / person["path"]).read_bytes(), image)
+        jfif = b"\xff\xd8\xff\xe0\x00\x10JFIF\x00"
+        jpeg = self.post("/__editor/image?name=photo.JFIF&folder=people", jfif)
+        self.assertTrue(jpeg["path"].endswith(".jpg"))
+        self.assertEqual((self.root / jpeg["path"]).read_bytes(), jfif)
+        with self.assertRaises(HTTPError):
+            self.post("/__editor/image?name=bad.jfif", b"not an image")
         with self.assertRaises(HTTPError):
             self.post("/__editor/image?name=photo.svg", b"<svg/>")
         with self.assertRaises(HTTPError):
@@ -77,6 +85,54 @@ class EditorServerTest(unittest.TestCase):
         with self.assertRaises(HTTPError) as error:
             urlopen(self.base + "/.git/config")
         self.assertEqual(error.exception.code, 403)
+
+    def test_launcher_entry_links_and_editor_assets(self):
+        # Exercise the real hub and relative URLs, not just independent known endpoints.
+        source = Path(__file__).resolve().parents[2]
+        import shutil
+        shutil.copytree(source / "tools", self.root / "tools")
+        shutil.copy2(source / "styles.css", self.root / "styles.css")
+        for name in ["members-data.js", "members.js", "media-data.js", "media.js", "index.html"]:
+            shutil.copy2(source / name, self.root / name)
+
+        class Links(HTMLParser):
+            def __init__(self):
+                super().__init__()
+                self.urls = []
+
+            def handle_starttag(self, tag, attrs):
+                values = dict(attrs)
+                if tag in {"a", "link", "script"}:
+                    url = values.get("href") or values.get("src")
+                    if url:
+                        self.urls.append(url)
+
+        response = urlopen(self.base + "/")
+        self.assertEqual(response.url, self.base + "/tools/editors.html")
+        links = Links()
+        links.feed(response.read().decode())
+        pages = [urljoin(response.url, url) for url in links.urls if url.endswith(".html")]
+        self.assertIn(self.base + "/tools/members-editor.html", pages)
+        self.assertIn(self.base + "/tools/media-editor.html", pages)
+        for url in pages:
+            page = urlopen(url)
+            self.assertEqual(page.status, 200)
+            if "/tools/" in url:
+                assets = Links()
+                assets.feed(page.read().decode())
+                for asset in assets.urls:
+                    if ".css" in asset or ".js" in asset:
+                        self.assertEqual(urlopen(urljoin(url, asset)).status, 200)
+        for filename in ["members-editor.html", "media-editor.html"]:
+            self.assertEqual(urlopen(self.base + "/" + filename).url, self.base + "/tools/" + filename)
+
+    def test_launch_uses_next_port_when_preferred_port_is_busy(self):
+        other = module.create_available_server(self.root, self.server.server_port)
+        try:
+            self.assertNotEqual(other.server_port, self.server.server_port)
+            self.assertEqual(other.server_address[0], "127.0.0.1")
+        finally:
+            other.server_close()
 
 
 if __name__ == "__main__":

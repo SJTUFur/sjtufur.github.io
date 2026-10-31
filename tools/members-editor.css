@@ -11,6 +11,12 @@
 .editor-export { margin-left: auto; color: #fff; background: var(--teal); border: 1px solid transparent; }
 .editor-toolbar .btn, .editor-row-actions button, .details-footer .btn, .dialog-close { cursor: pointer; }
 .editor-summary { display: flex; align-items: baseline; gap: 16px; margin: 18px 0 12px; font-size: .85rem; }
+.editor-storage { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 16px; margin-top: 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--band); }
+.editor-storage p { flex: 1 1 260px; margin: 0; color: var(--muted); font-size: .83rem; }
+.editor-storage .btn { font: inherit; font-size: .83rem; min-height: 36px; padding: 6px 12px; cursor: pointer; }
+.editor-storage p[data-error="true"], .editor-error { color: #b63630; }
+.editor-error { padding: 12px; border: 1px solid currentColor; border-radius: 6px; font-size: .85rem; }
+.excel-storage { margin: 16px 0; }
 #member-count { color: var(--teal); font-weight: 700; white-space: nowrap; }
 #editor-status { margin: 0; overflow-wrap: anywhere; color: var(--muted); }
 #editor-status[data-error="true"], #details-error { color: #b63630; }

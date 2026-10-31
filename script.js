@@ -16,15 +16,14 @@
     try { storage?.setItem(key, value); } catch { /* Theme selection still works without storage. */ }
   }
 
-  const colors = { default: "原有配色", red: "交大红", blue: "蓝色" };
-  function preferredTheme() {
-    const saved = preference("site-theme");
-    return ["light", "dark"].includes(saved) ? saved : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  }
+  const colors = { red: "交大红", blue: "蓝色", black: "黑色" };
 
   function setColor(value) {
-    const color = Object.hasOwn(colors, value) ? value : "default";
+    // Migrate the former neutral palette and light switch into one theme choice.
+    const color = value === "default" ? (preference("site-theme") === "dark" ? "black" : "red")
+      : Object.hasOwn(colors, value) ? value : "red";
     root.dataset.color = color;
+    root.dataset.theme = color === "black" ? "dark" : "light";
     document.querySelectorAll('input[name="site-color"]').forEach((input) => {
       input.checked = input.value === color;
     });
@@ -32,26 +31,6 @@
     if (summary) {
       summary.setAttribute("aria-label", `选择颜色主题，当前：${colors[color]}`);
       summary.title = `颜色主题：${colors[color]}`;
-    }
-    setTheme(preferredTheme());
-  }
-
-  function setTheme(theme) {
-    const fixedDaytime = ["red", "blue"].includes(root.dataset.color);
-    if (fixedDaytime) theme = "light";
-    root.dataset.theme = theme;
-    const themeToggle = document.querySelector("[data-theme-toggle]");
-    const themeLabel = document.querySelector("[data-theme-label]");
-    if (themeLabel) {
-      themeLabel.textContent = theme === "dark" ? "日间模式" : "深夜模式";
-    }
-    if (themeToggle) {
-      themeToggle.hidden = fixedDaytime;
-      themeToggle.disabled = fixedDaytime;
-      themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
-      const label = theme === "dark" ? "切换日间模式" : "切换深色模式";
-      themeToggle.setAttribute("aria-label", label);
-      themeToggle.title = label;
     }
   }
 
@@ -65,7 +44,9 @@
 
   mountNav();
 
-  setColor(preference("site-color"));
+  const savedColor = preference("site-color");
+  setColor(savedColor);
+  if (["default", "white"].includes(savedColor)) savePreference("site-color", root.dataset.color);
 
   const colorPicker = document.querySelector("[data-color-picker]");
   document.querySelectorAll('input[name="site-color"]').forEach((input) => {
@@ -85,16 +66,7 @@
     }
   });
   window.addEventListener("storage", (event) => {
-    if (event.key === "site-color") setColor(event.newValue);
-    if (event.key === "site-theme" && ["light", "dark"].includes(event.newValue)) setTheme(event.newValue);
-  });
-
-  const themeToggle = document.querySelector("[data-theme-toggle]");
-  themeToggle?.addEventListener("click", () => {
-    if (["red", "blue"].includes(root.dataset.color)) return;
-    const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-    savePreference("site-theme", nextTheme);
-    setTheme(nextTheme);
+    if (event.key === "site-color" || event.key === null) setColor(preference("site-color"));
   });
 
   const navToggle = document.querySelector(".nav-toggle");

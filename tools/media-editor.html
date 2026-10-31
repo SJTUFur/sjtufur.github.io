@@ -15,11 +15,12 @@
       <button class="btn editor-button" type="button" id="export-media">下载资料</button>
       <button class="btn editor-export" type="button" id="apply-media">应用到工程</button>
     </div>
+    <div class="editor-storage"><p data-project-status role="status" aria-live="polite"></p><button class="btn editor-button" type="button" data-connect-project>选择工程文件夹</button></div>
     <div class="editor-summary"><span id="media-count"></span><p id="editor-status" role="status" aria-live="polite">资料已载入。</p></div>
     <form id="media-form"><div class="editor-table-wrap" tabindex="0" role="region" aria-label="多媒体资料表，可横向滚动">
       <table class="editor-table"><caption class="sr-only">多媒体资料</caption><thead><tr><th scope="col" class="col-number">#</th><th scope="col" class="col-cover">缩略图</th><th scope="col">标题</th><th scope="col" class="col-group">分类</th><th scope="col" class="col-media-date">日期</th><th scope="col" class="col-link">首页展示</th><th scope="col" class="col-actions">操作</th></tr></thead><tbody id="media-list"></tbody></table>
     </div></form>
-    <details class="editor-help"><summary>如何使用和保存？</summary><p>在“更多”中填写图片路径、图片说明、介绍、作者和视频链接。通过本地编辑服务打开时，可直接上传图片并点击“应用到工程”；也可下载 media-data.js 替换工程根目录的同名文件。应用后刷新网站预览，线上更新仍需提交发布。</p><p>启动本地服务：在工程目录运行 <code>python3 tools/editor_server.py</code>，打开终端显示的网址。图片支持 PNG、JPG、GIF、WebP，单张不超过 8 MB。上传会把图片复制到工程中；还需保存详情并应用资料才会显示在网站上。</p></details>
+    <details class="editor-help"><summary>如何使用和保存？</summary><p>在“更多”中填写图片路径、图片说明、介绍、作者和视频链接。Chrome / Edge 直接打开文件时，先“选择工程文件夹”并允许编辑，即可上传图片并点击“应用到工程”；本地编辑服务也支持直接保存。应用后刷新网站预览，线上更新仍需提交发布。</p><p>其他浏览器可双击 <code>tools/启动编辑工具.command</code>，从工具入口打开本页。图片支持 PNG、JPG、JFIF、GIF、WebP（JFIF 自动保存为 .jpg），单张不超过 8 MB。上传会把图片复制到工程中；还需保存详情并应用资料才会显示在网站上。</p></details>
     <section class="editor-preview"><h2>多媒体页预览</h2><div id="media-preview"></div></section>
   </main>
   <template id="media-template"><tr>
@@ -35,7 +36,7 @@
     <div class="media-details-body">
     <img class="details-media-preview" id="details-image-preview" alt="图片预览">
     <label class="details-field" for="details-image">图片 / 视频封面路径<input id="details-image" placeholder="assets/images/gallery/照片.jpg"></label>
-    <div class="media-upload-row"><button class="btn editor-button" id="upload-image" type="button">上传图片到工程</button><input id="image-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden><span class="field-help" id="upload-status" role="status"></span></div>
+    <div class="media-upload-row"><button class="btn editor-button" id="upload-image" type="button">上传图片到工程</button><input id="image-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp,.jfif" hidden><span class="field-help" id="upload-status" role="status"></span></div>
     <label class="details-field" for="details-alt">图片说明<input id="details-alt" placeholder="描述画面内容，供无障碍阅读使用"></label>
     <label class="details-field" for="details-description">内容简介<textarea id="details-description" rows="2"></textarea></label>
     <label class="details-field" for="details-credit">作者 / 来源<input id="details-credit" placeholder="例如：社员合绘"></label>
@@ -43,6 +44,6 @@
     <p class="field-help">视频须填写播放页链接；照片和作品可留空，访客点击后查看原图。视频封面可留空。</p>
     <p id="details-error" role="alert"></p></div><footer class="details-footer"><button class="btn editor-button" type="button" id="cancel-details">取消</button><button class="btn primary" id="save-details" type="submit">保存详情</button></footer>
   </form></dialog>
-  <script src="../media-data.js"></script><script src="../media.js"></script><script src="editor-files.js"></script><script src="media-editor.js"></script>
+  <script src="../media-data.js"></script><script src="../media.js"></script><script src="editor-files.js?v=20261101c"></script><script src="media-editor.js"></script>
 </body>
 </html>

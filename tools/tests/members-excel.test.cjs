@@ -6,7 +6,7 @@ const root = path.resolve(__dirname, '../..');
 const XLSX = require(path.join(root, 'tools/vendor/xlsx.mini.min.js'));
 const ctx = { window: {XLSX}, URL, document: {querySelector: () => null} };
 vm.createContext(ctx);
-for (const file of ['members.js', 'tools/members-excel.js']) {
+for (const file of ['members.js', 'tools/members-excel.js', 'tools/members-excel-images.js']) {
   vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),ctx);
 }
 const api=ctx.window.MemberExcelImport;
@@ -103,4 +103,51 @@ const parsed=api.read(XLSX.write(tencentBook,{bookType:'xlsx',type:'buffer'}));
 assert.equal(parsed.length,1);
 assert.equal(parsed[0].merges[0].e.c,14);
 assert.equal(api.convert(parsed[0].rows,existing,{updateExisting:true}).updates.length,1);
+assert.equal(api.imageType(Uint8Array.from([255,216,255,224])).extension,'jpg');
+assert.equal(api.imageType(Uint8Array.from([137,80,78,71,13,10,26,10])).extension,'png');
+assert.equal(api.imageType(Buffer.from('GIF89a')).extension,'gif');
+assert.equal(api.imageType(Buffer.from('RIFF0000WEBP')).extension,'webp');
+assert.equal(api.imageType(Buffer.from('<svg/>')),null);
+// Drawing XML order can differ from the visible left-to-right order.
+assert.equal(api.selectAvatar([
+  {image:'右图',column:11,offset:0,top:0},
+  {image:'左图',column:9,offset:200,top:0}
+]),'左图');
+assert.equal(api.selectAvatar([
+  {image:'同列右图',column:9,offset:10000,top:0},
+  {image:'同列左图',column:9,offset:200,top:5000}
+]),'同列左图');
+assert.equal(api.selectAvatar([
+  {image:'下图',column:9,offset:200,top:5000},
+  {image:'上图',column:9,offset:200,top:0}
+]),'上图');
+assert.equal(api.selectAvatar([{image:'唯一图片',column:9,offset:0,top:0}]),'唯一图片');
 console.log('PASS: 腾讯表头、默认同意、明确拒绝、同名可选更新、管理员部门保留、兴趣保存、头像关联、部分字段更新、歧义保护及原资料不变。');
+
+async function attachmentRegression() {
+  // Tencent can put a temporary .jfif path in drawing XML and omit its image bytes entirely.
+  const missing = {row:2,column:9,offset:0,top:0,reference:'/tmp/export/attachments/missing-uuid.jfif',warning:'缺失头像'};
+  const sheet = {rows:[['提交者（自动）','昵称','头像'],['提交者_甲','昵称甲','']],images:new Map(),imageWarnings:['缺失头像'],missingImages:[missing],imageCandidates:new Map([[2,[missing]]])};
+  const bytes = Uint8Array.from([255,216,255,224,0,16,74,70,73,70,0]);
+  const file = new File([bytes],'提交者_甲_2026-11-01 08.00.00_photo_01.jfif');
+  const result = await api.attachImages([sheet],[file]);
+  assert.equal(result.attached,1);
+  assert.equal(result.unmatched.length,0);
+  assert.equal(sheet.images.get(2).extension,'jpg');
+  assert.equal(sheet.images.get(2).mime,'image/jpeg');
+  assert.deepEqual(Array.from(sheet.images.get(2).bytes),Array.from(bytes));
+  assert.equal(sheet.imageWarnings.length,0);
+  assert.equal((await api.attachImages([sheet],[file])).attached,0);
+  const unmatched = new File([bytes],'不相干的图片.jfif');
+  const pending = {...missing,image:undefined};
+  const second = {...sheet,images:new Map(),missingImages:[pending],imageCandidates:new Map([[2,[pending]]]),imageWarnings:['缺失头像']};
+  assert.equal((await api.attachImages([second],[unmatched])).unmatched.length,1);
+  assert.equal(second.images.size,0);
+  const bad = new File(['not an image'],file.name);
+  assert.equal((await api.attachImages([second],[bad])).errors.length,1);
+  assert.equal(second.images.size,0);
+  const duplicate = {...second,rows:[...second.rows,['提交者_甲','昵称乙','']],missingImages:[pending,{...pending,row:3}]};
+  assert.equal((await api.attachImages([duplicate],[file])).attached,0);
+  console.log('PASS: Excel 缺失 JFIF 附件按提交者自动匹配、JPEG 字节识别、重复补充、不匹配/歧义保护和无效图片保护。');
+}
+attachmentRegression().catch(error=>{console.error(error);process.exitCode=1;});
