@@ -54,3 +54,53 @@ assert.equal(roundtrip.members[1].qq,'987654321');
 assert.equal(roundtrip.members.length,3);
 assert.equal(ctx.window.MemberDirectory.parse(ctx.window.MemberDirectory.serialize([...old,...roundtrip.members])).length,old.length+3);
 console.log('PASS: XLSX 读取、自动找表头、列顺序、额外列、多工作表、公开授权、QQ 隐藏、链接校验、头像提示、同名保护、重复导入及资料导出。');
+
+// Tencent's real export format has required markers, metadata and no consent column.
+const tencentHeaders=['提交者（自动）','提交时间（自动）','昵称（必填）','兴趣方向','一句话简介','启用名字链接（必填）','个人网页','公开QQ（必填）','QQ号','头像'];
+const tencent=[tencentHeaders,['提交人',46326.3,'维护者','摄影','新的简介','是','https://example.com/profile','否','123456789','']];
+const existing=ctx.window.MemberDirectory.normalize([
+  {name:'维护者',group:'administrators',role:'技术部',avatar:'assets/images/people/old.png',description:'旧简介',qq:'987654321'},
+  {name:'保留社员',group:'community',role:'音乐',description:'原有资料'}
+]);
+const snapshot=JSON.stringify(existing);
+assert.equal(api.convert(tencent,existing).skipped.length,1);
+const image={bytes:new Uint8Array([1,2,3]),extension:'png',mime:'image/png'};
+const update=api.convert(tencent,existing,{updateExisting:true,images:new Map([[2,image]])});
+assert.equal(update.members.length,0);
+assert.equal(update.updates.length,1);
+assert.equal(update.imageCount,1);
+assert.equal(update.entries[0].image,image);
+const merged=api.merge(existing,update);
+assert.equal(merged.length,2);
+assert.equal(merged[0].name,'维护者');
+assert.equal(merged[0].group,'administrators');
+assert.equal(merged[0].role,'技术部');
+assert.equal(merged[0].interests,'摄影');
+assert.equal(merged[0].description,'新的简介');
+assert.equal(merged[0].qq,'');
+assert.equal(merged[0].avatar,'assets/images/people/old.png');
+assert.equal(merged[0].linkEnabled,true);
+assert.equal(merged[1].description,'原有资料');
+assert.equal(JSON.stringify(existing),snapshot);
+const defaultConsent=api.convert([['昵称','一句话简介','同意公开展示'],['甲','简介',''],['乙','简介','不同意公开展示'],['丙','简介','不确定']],[]);
+assert.equal(defaultConsent.members.length,1);
+assert.equal(defaultConsent.skipped.length,1);
+assert.equal(defaultConsent.errors.length,1);
+const sparseUpdate=api.convert([['昵称','一句话简介'],['维护者','只改简介']],existing,{updateExisting:true});
+assert.equal(sparseUpdate.updates[0].member.qq,'987654321');
+assert.equal(sparseUpdate.updates[0].member.role,'技术部');
+const duplicate=api.convert([...tencent,tencent[1]],existing,{updateExisting:true});
+assert.equal(duplicate.updates.length,1);
+assert.equal(duplicate.skipped.length,1);
+const ambiguous=api.convert(tencent,[existing[0],existing[0]],{updateExisting:true});
+assert.equal(ambiguous.updates.length,0);
+assert.equal(ambiguous.errors.length,1);
+const tencentBook=XLSX.utils.book_new();
+const tencentSheet=XLSX.utils.aoa_to_sheet(tencent);
+tencentSheet['!merges']=[{s:{r:0,c:9},e:{r:0,c:14}}];
+XLSX.utils.book_append_sheet(tencentBook,tencentSheet,'腾讯收集结果');
+const parsed=api.read(XLSX.write(tencentBook,{bookType:'xlsx',type:'buffer'}));
+assert.equal(parsed.length,1);
+assert.equal(parsed[0].merges[0].e.c,14);
+assert.equal(api.convert(parsed[0].rows,existing,{updateExisting:true}).updates.length,1);
+console.log('PASS: 腾讯表头、默认同意、明确拒绝、同名可选更新、管理员部门保留、兴趣保存、头像关联、部分字段更新、歧义保护及原资料不变。');

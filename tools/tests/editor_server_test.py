@@ -63,8 +63,13 @@ class EditorServerTest(unittest.TestCase):
         second = self.post("/__editor/image?name=photo.png", image)
         self.assertEqual(first["path"], second["path"])
         self.assertEqual((self.root / first["path"]).read_bytes(), image)
+        person = self.post("/__editor/image?name=avatar.png&folder=people", image)
+        self.assertTrue(person["path"].startswith("assets/images/people/"))
+        self.assertEqual((self.root / person["path"]).read_bytes(), image)
         with self.assertRaises(HTTPError):
             self.post("/__editor/image?name=photo.svg", b"<svg/>")
+        with self.assertRaises(HTTPError):
+            self.post("/__editor/image?name=photo.png&folder=../elsewhere", image)
 
     def test_hidden_files_are_not_served(self):
         (self.root / ".git").mkdir()

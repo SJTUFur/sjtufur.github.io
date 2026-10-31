@@ -130,9 +130,9 @@ class EditorHandler(SimpleHTTPRequestHandler):
         stem = re.sub(r"[^\w-]", "-", Path(name).stem)[:50] or "image"
         filename = f"{stem}-{hashlib.sha256(body).hexdigest()[:12]}{suffix}"
         folder = self.server.editor_root / "assets/images" / image_folder
-        folder.mkdir(parents=True, exist_ok=True)
         if folder.resolve() != self.server.editor_root / "assets/images" / image_folder:
             raise ValueError("图片目录不能指向工程外部。")
+        folder.mkdir(parents=True, exist_ok=True)
         target = folder / filename
         if target.is_symlink():
             raise ValueError("图片文件不能是符号链接。")
