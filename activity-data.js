@@ -1,0 +1,1 @@
+window.SITE_ACTIVITY=[{date:"2026-10-09",summary:"国庆假期，约 40 位群友相聚闵行，在轰趴馆里度过了两天一夜的出毛、游戏与合照时光。",title:"2026 国庆荣兽聚活动回顾",url:"/announcements/2026-%E5%9B%BD%E5%BA%86%E8%8D%A3%E5%85%BD%E8%81%9A%E6%B4%BB%E5%8A%A8%E5%9B%9E%E9%A1%BE/"}]

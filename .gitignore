@@ -8,3 +8,5 @@ hugo/resources/
 Thumbs.db
 .vscode/
 .idea/
+__pycache__/
+*.pyc

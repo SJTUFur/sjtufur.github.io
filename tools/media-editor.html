@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow"><title>多媒体编辑工具 | SJTUfur</title>
+  <link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="members-editor.css"><link rel="stylesheet" href="media-editor.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <header class="editor-header"><div><h1>多媒体资料</h1><p>照片、作品与视频统一维护；首页按顺序展示勾选内容中的前 3 项。</p></div><a class="text-link" href="../gallery.html" target="_blank" rel="noopener">打开多媒体页 ↗</a></header>
+    <div class="editor-toolbar">
+      <button class="btn primary" type="button" id="add-media">＋ 新增内容</button>
+      <button class="btn editor-button" type="button" id="import-media">导入资料</button><input id="media-file" type="file" accept=".js" hidden>
+      <button class="btn editor-button" type="button" id="preview-media">更新预览</button>
+      <button class="btn editor-button" type="button" id="export-media">下载资料</button>
+      <button class="btn editor-export" type="button" id="apply-media">应用到工程</button>
+    </div>
+    <div class="editor-summary"><span id="media-count"></span><p id="editor-status" role="status" aria-live="polite">资料已载入。</p></div>
+    <form id="media-form"><div class="editor-table-wrap" tabindex="0" role="region" aria-label="多媒体资料表，可横向滚动">
+      <table class="editor-table"><caption class="sr-only">多媒体资料</caption><thead><tr><th scope="col" class="col-number">#</th><th scope="col" class="col-cover">缩略图</th><th scope="col">标题</th><th scope="col" class="col-group">分类</th><th scope="col" class="col-media-date">日期</th><th scope="col" class="col-link">首页展示</th><th scope="col" class="col-actions">操作</th></tr></thead><tbody id="media-list"></tbody></table>
+    </div></form>
+    <details class="editor-help"><summary>如何使用和保存？</summary><p>在“更多”中填写图片路径、图片说明、介绍、作者和视频链接。通过本地编辑服务打开时，可直接上传图片并点击“应用到工程”；也可下载 media-data.js 替换工程根目录的同名文件。应用后刷新网站预览，线上更新仍需提交发布。</p><p>启动本地服务：在工程目录运行 <code>python3 tools/editor_server.py</code>，打开终端显示的网址。图片支持 PNG、JPG、GIF、WebP，单张不超过 8 MB。上传会把图片复制到工程中；还需保存详情并应用资料才会显示在网站上。</p></details>
+    <section class="editor-preview"><h2>多媒体页预览</h2><div id="media-preview"></div></section>
+  </main>
+  <template id="media-template"><tr>
+    <td class="row-number"></td><td><img class="editor-media-thumb" alt="缩略图"></td>
+    <td><input name="title" aria-label="标题" placeholder="内容标题" required></td>
+    <td><select name="category" aria-label="分类"><option value="group">集体活动</option><option value="creation">创作作品</option><option value="video">视频内容</option></select></td>
+    <td><input name="date" aria-label="日期" placeholder="YYYY-MM-DD"></td>
+    <td><label class="editor-switch"><input name="featured" type="checkbox" role="switch" aria-label="首页展示"><span class="switch-track" aria-hidden="true"></span><span class="switch-label">关闭</span></label><input name="image" type="hidden"><input name="alt" type="hidden"><input name="description" type="hidden"><input name="credit" type="hidden"><input name="url" type="hidden"></td>
+    <td><div class="editor-row-actions"><button class="row-more" type="button" data-action="more">更多</button><button type="button" data-action="up" aria-label="上移">↑</button><button type="button" data-action="down" aria-label="下移">↓</button><button class="row-delete" type="button" data-action="delete" aria-label="删除">×</button></div></td>
+  </tr></template>
+  <dialog id="media-details" aria-labelledby="details-heading"><form id="details-form">
+    <header class="details-header"><div><h2 id="details-heading"></h2><p class="field-help">编辑图片、说明和网页入口</p></div><button class="dialog-close" id="close-details" type="button" aria-label="关闭详情">×</button></header>
+    <div class="media-details-body">
+    <img class="details-media-preview" id="details-image-preview" alt="图片预览">
+    <label class="details-field" for="details-image">图片 / 视频封面路径<input id="details-image" placeholder="assets/images/gallery/照片.jpg"></label>
+    <div class="media-upload-row"><button class="btn editor-button" id="upload-image" type="button">上传图片到工程</button><input id="image-file" type="file" accept="image/png,image/jpeg,image/gif,image/webp" hidden><span class="field-help" id="upload-status" role="status"></span></div>
+    <label class="details-field" for="details-alt">图片说明<input id="details-alt" placeholder="描述画面内容，供无障碍阅读使用"></label>
+    <label class="details-field" for="details-description">内容简介<textarea id="details-description" rows="2"></textarea></label>
+    <label class="details-field" for="details-credit">作者 / 来源<input id="details-credit" placeholder="例如：社员合绘"></label>
+    <label class="details-field" for="details-url">网页链接<input id="details-url" type="url" placeholder="https://…"></label>
+    <p class="field-help">视频须填写播放页链接；照片和作品可留空，访客点击后查看原图。视频封面可留空。</p>
+    <p id="details-error" role="alert"></p></div><footer class="details-footer"><button class="btn editor-button" type="button" id="cancel-details">取消</button><button class="btn primary" id="save-details" type="submit">保存详情</button></footer>
+  </form></dialog>
+  <script src="../media-data.js"></script><script src="../media.js"></script><script src="editor-files.js"></script><script src="media-editor.js"></script>
+</body>
+</html>

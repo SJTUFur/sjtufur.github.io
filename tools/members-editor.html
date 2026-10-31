@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>成员编辑工具 | SJTUfur</title>
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="members-editor.css">
+</head>
+<body>
+  <main class="editor-shell">
+    <header class="editor-header">
+      <div>
+        <p class="eyebrow">SJTUFUR · 本地维护工具</p>
+        <h1>成员资料</h1>
+        <p>每人一行，直接填写。头像、简介和个人网页在“更多”里编辑。</p>
+      </div>
+      <a class="text-link" href="../members.html" target="_blank" rel="noopener">打开成员页 ↗</a>
+    </header>
+    <div class="editor-toolbar">
+      <button class="btn primary" type="button" id="add-member">＋ 新增成员</button>
+      <button class="btn editor-button" type="button" id="import-members">导入资料</button>
+      <input id="import-file" type="file" accept=".js" hidden>
+      <button class="btn editor-button" type="button" id="import-excel">导入 Excel</button>
+      <input id="excel-file" type="file" accept=".xlsx" hidden>
+      <button class="btn editor-button" type="button" id="preview-members">更新预览</button>
+      <button class="btn editor-button" type="button" id="export-members">下载成员资料</button>
+      <button class="btn editor-export" type="button" id="apply-members">应用到工程</button>
+    </div>
+    <div class="editor-summary">
+      <span id="member-count"></span>
+      <p id="editor-status" role="status" aria-live="polite">资料已载入。所有编辑都在本地进行。</p>
+    </div>
+    <form id="members-form">
+      <div class="editor-table-wrap" tabindex="0" role="region" aria-label="成员资料表，可横向滚动">
+        <table class="editor-table">
+          <caption class="sr-only">成员资料；点击每行的更多按钮编辑头像、简介和网页。</caption>
+          <thead><tr>
+            <th scope="col" class="col-number">#</th>
+            <th scope="col" class="col-name">昵称 <span class="required-mark">*</span></th>
+            <th scope="col" class="col-group">分组</th>
+            <th scope="col" class="col-role">部门 / 兴趣</th>
+            <th scope="col" class="col-qq">QQ</th>
+            <th scope="col" class="col-link">名字链接</th>
+            <th scope="col" class="col-actions">操作</th>
+          </tr></thead>
+          <tbody id="editor-list"></tbody>
+        </table>
+      </div>
+      <p id="empty-members" class="editor-empty" hidden>还没有成员，点击“新增成员”开始填写。</p>
+    </form>
+    <details class="editor-help">
+      <summary>如何保存和发布？</summary>
+      <p>通过本地编辑服务打开时，点击“应用到工程”即可保存。启动方式：在工程目录运行 <code>python3 tools/editor_server.py</code>，打开终端中的网址。也可下载成员资料并替换工程根目录的 <code>members-data.js</code>。线上更新仍需按 PR 流程发布。</p>
+      <p>只需填写昵称和分组，其余均可留空。新头像先放入 <code>assets/images/people/</code>，再到“更多”里填写路径。名字链接关闭时会显示普通文字，已填的网址会保留。</p>
+      <p>腾讯收集表导出的 .xlsx 可直接导入，未填写展示意愿默认同意。导入前可预览，并选择是否更新同名成员；已有管理员的分组和部门会保留。通过本地编辑服务可自动保存 Excel 内嵌头像，只有附件链接的头像仍需另行下载。详见<a class="text-link" href="member-questionnaire.md" target="_blank" rel="noopener">问卷设计说明</a>。</p>
+    </details>
+    <section class="editor-preview" aria-labelledby="preview-heading">
+      <h2 id="preview-heading">成员页预览</h2>
+      <div id="member-preview"></div>
+    </section>
+  </main>
+  <template id="member-template">
+    <tr>
+      <td class="row-number"></td>
+      <td><input name="name" aria-label="昵称" required autocomplete="off" placeholder="成员昵称"></td>
+      <td><select name="group" aria-label="分组"><option value="community">社员</option><option value="administrators">管理员</option></select></td>
+      <td><input name="role" aria-label="部门或兴趣" placeholder="可留空"></td>
+      <td><input name="qq" aria-label="QQ" inputmode="numeric" pattern="[0-9]{5,12}" placeholder="可留空"></td>
+      <td>
+        <label class="editor-switch">
+          <input name="linkEnabled" type="checkbox" role="switch" aria-label="名字链接">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">关闭</span>
+        </label>
+        <input name="website" type="hidden">
+        <input name="avatar" type="hidden">
+        <input name="description" type="hidden">
+        <input name="interests" type="hidden">
+      </td>
+      <td><div class="editor-row-actions">
+        <button type="button" data-action="more" class="row-more">更多</button>
+        <button type="button" data-action="up" title="上移" aria-label="上移">↑</button>
+        <button type="button" data-action="down" title="下移" aria-label="下移">↓</button>
+        <button type="button" data-action="delete" class="row-delete" title="删除成员" aria-label="删除成员">×</button>
+      </div></td>
+    </tr>
+  </template>
+  <dialog id="member-details" aria-labelledby="details-heading">
+    <form id="details-form">
+      <header class="details-header">
+        <div><p class="eyebrow">成员详情</p><h2 id="details-heading"></h2></div>
+        <button class="dialog-close" type="button" id="close-details" aria-label="关闭详情">×</button>
+      </header>
+      <div class="details-avatar-field">
+        <img id="details-avatar-preview" src="../assets/images/member-placeholder.svg" alt="头像预览">
+        <label for="details-avatar">头像路径<input id="details-avatar" placeholder="assets/images/people/昵称.png" aria-describedby="avatar-help"></label>
+      </div>
+      <p class="field-help" id="avatar-help">先把图片放入工程的 assets/images/people/，再填写路径。留空使用默认头像。</p>
+      <label class="details-field" for="details-description">一句话简介<textarea id="details-description" rows="3" placeholder="介绍一下自己，或写下喜欢的创作和活动方向"></textarea></label>
+      <label class="details-field" for="details-interests">补充兴趣方向<input id="details-interests" placeholder="管理员的兴趣可写在这里，保留表格中的部门"></label>
+      <div class="details-link-heading">
+        <label for="details-link-enabled">名字链接</label>
+        <label class="editor-switch">
+          <input id="details-link-enabled" type="checkbox" role="switch" aria-label="详情名字链接">
+          <span class="switch-track" aria-hidden="true"></span>
+          <span class="switch-label">关闭</span>
+        </label>
+      </div>
+      <label class="details-field" for="details-website">目标网页<input id="details-website" type="url" placeholder="https://…" aria-describedby="website-help"></label>
+      <p class="field-help" id="website-help">开启后，访客点击成员名字会在新标签页打开这个网页。关闭后网址仍会保留。</p>
+      <p id="details-error" role="alert"></p>
+      <footer class="details-footer">
+        <button class="btn editor-button" type="button" id="cancel-details">取消</button>
+        <button class="btn primary" type="submit">保存详情</button>
+      </footer>
+    </form>
+  </dialog>
+  <dialog id="excel-import-dialog" aria-labelledby="excel-heading">
+    <header class="details-header">
+      <div><p class="eyebrow">腾讯收集表</p><h2 id="excel-heading">导入成员资料</h2></div>
+      <button class="dialog-close" type="button" id="close-excel" aria-label="关闭 Excel 导入">×</button>
+    </header>
+    <p id="excel-filename" class="field-help"></p>
+    <label class="details-field" for="excel-sheet">工作表<select id="excel-sheet"></select></label>
+    <p id="excel-summary" role="status" aria-live="polite"></p>
+    <p class="field-help">未填写展示意愿默认同意；明确“不展示”的回复会跳过。QQ 仅在“公开QQ”选择“是”时导入。</p>
+    <div class="excel-options">
+      <label><input type="checkbox" id="excel-update-existing"> 更新同名成员资料 <span>保留分组和管理员部门</span></label>
+      <label><input type="checkbox" id="excel-import-avatars" checked> 导入内嵌头像 <span>确认导入时保存到本地工程</span></label>
+    </div>
+    <div class="excel-preview-wrap">
+      <table class="excel-preview-table">
+        <caption class="sr-only">本次将新增或更新的成员</caption>
+        <thead><tr><th scope="col" class="excel-kind">操作</th><th scope="col" class="excel-avatar">头像</th><th scope="col">昵称</th><th scope="col">兴趣方向</th><th scope="col">一句话简介</th><th scope="col">名字链接</th><th scope="col">公开 QQ</th></tr></thead>
+        <tbody id="excel-preview-list"></tbody>
+      </table>
+    </div>
+    <p id="excel-avatar-note" class="field-help"></p>
+    <details id="excel-issues"><summary id="excel-issues-title">查看未导入记录</summary><ul id="excel-issues-list"></ul></details>
+    <footer class="details-footer">
+      <button class="btn editor-button" type="button" id="cancel-excel">取消</button>
+      <button class="btn primary" type="button" id="apply-excel">确认导入</button>
+    </footer>
+  </dialog>
+  <script src="../members-data.js"></script>
+  <script src="../members.js"></script>
+  <script src="vendor/xlsx.mini.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="members-excel.js"></script>
+  <script src="members-excel-images.js"></script>
+  <script src="editor-files.js"></script>
+  <script src="members-editor.js"></script>
+</body>
+</html>

@@ -9,3 +9,15 @@ description = "东川路800号荣毛社活动动态"
 
 [permalinks]
 announcements = "/announcements/:slug/"
+
+[outputs]
+home = ["HTML", "activity"]
+
+[mediaTypes."application/javascript"]
+suffixes = ["js"]
+
+[outputFormats.activity]
+mediaType = "application/javascript"
+baseName = "activity-data"
+isPlainText = true
+notAlternative = true

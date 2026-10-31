@@ -1,7 +1,7 @@
 {{ define "main" }}
 <main>
   <header class="page-hero"><div class="page-hero-inner">
-    <p class="eyebrow">ACTIVITY UPDATE</p><h1>{{ .Title }}</h1>
+    <h1>{{ .Title }}</h1><p class="eyebrow">ACTIVITY UPDATE</p>
     <p>{{ .Date.Format "2006 年 01 月 02 日" }}{{ with .Params.tags }} · {{ delimit . " / " }}{{ end }}</p>
   </div></header>
   <article class="section"><div class="section-inner prose announcement-post">

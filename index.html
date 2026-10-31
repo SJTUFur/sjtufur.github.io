@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
   <head>
     <meta charset="utf-8" />
@@ -20,18 +20,10 @@
               />
             </article>
             <article class="slide" data-slide>
-              <div
-                class="slide-placeholder slide-workshop"
-                role="img"
-                aria-label="社团创作活动"
-              ></div>
+              <img src="assets/images/sjtufur-sticker-collage.jpg" alt="社员原创角色合绘" />
             </article>
             <article class="slide" data-slide>
-              <div
-                class="slide-placeholder slide-photo"
-                role="img"
-                aria-label="社团摄影活动"
-              ></div>
+              <img src="assets/images/christmas-meetup-2025.jpg" alt="圣诞联谊合照" />
             </article>
           </div>
           <button
@@ -61,8 +53,8 @@
           </div>
         </div>
         <div class="hero-copy">
-          <p class="eyebrow">SJTU FURRY COMMUNITY</p>
           <h1>东川路800号荣毛社</h1>
+          <p class="eyebrow">SJTU FURRY COMMUNITY</p>
           <p>
             围绕原创角色、绘画、兽装、摄影和校园活动，建立尊重、开放、友善的同好空间。
           </p>
@@ -72,56 +64,33 @@
           </div>
         </div>
       </section>
-      <section class="section intro">
-        <div class="section-inner two-column">
-          <div>
-            <p class="eyebrow">关于我们</p>
-            <h2>创作、交流与跨校合作</h2>
+      <section class="section" aria-labelledby="latest-heading">
+        <div class="section-inner">
+          <div class="section-title-row">
+            <div><h2 id="latest-heading">活动动态</h2><p>近期通知与活动回顾</p></div>
+            <a class="text-link" href="announcements/index.html">全部动态 →</a>
           </div>
-          <div class="prose">
-            <p>
-              SJTUfur 是东川路800号荣毛社，也是
-              SHCFA（上海高校小动物联盟）的重要联盟成员。
-            </p>
-            <p>
-              我们与上海大学（SHU）伙伴共同组织跨校活动，欢迎所有对拟人化动物角色和相关艺术创作感兴趣的同学。
-            </p>
-          </div>
+          <div class="home-activity-grid" data-home-activity></div>
+          <noscript><p><a href="announcements/index.html">查看活动动态</a></p></noscript>
         </div>
       </section>
-      <section class="section band">
+      <section class="section band" aria-labelledby="media-heading">
         <div class="section-inner">
-          <div class="section-heading">
-            <p class="eyebrow">社团活动</p>
-            <h2>从日常创作到年度相聚</h2>
+          <div class="section-title-row">
+            <div><h2 id="media-heading">多媒体展示</h2><p>活动影像与社员创作</p></div>
+            <a class="text-link" href="gallery.html">查看全部 →</a>
           </div>
-          <div class="feature-grid">
-            <article class="feature">
-              <span class="feature-icon">✦</span>
-              <h3>原创创作</h3>
-              <p>绘画、音乐、视频、小说、角色设定和文创分享。</p>
-            </article>
-            <article class="feature">
-              <span class="feature-icon">◉</span>
-              <h3>出毛与摄影</h3>
-              <p>校园摄影、兽装交流和安全舒适的出毛活动。</p>
-            </article>
-            <article class="feature">
-              <span class="feature-icon">↗</span>
-              <h3>跨校活动</h3>
-              <p>参与 SHCFA 联盟活动，与多所上海高校的同好交流。</p>
-            </article>
-            <article class="feature">
-              <span class="feature-icon">★</span>
-              <h3>年度轰趴</h3>
-              <p>每年国庆假期出毛、拍照、破冰和聚会。</p>
-            </article>
-          </div>
+          <div class="home-media-grid" data-media-featured></div>
+          <noscript><p><a href="gallery.html">查看多媒体内容</a></p></noscript>
         </div>
       </section>
     </main>
     <footer class="footer"><p>© 2026 东川路800号荣毛社。</p></footer>
-    <script src="nav.js?v=20261010"></script>
-    <script src="script.js"></script>
+    <script src="nav.js?v=20261031d"></script>
+    <script src="script.js?v=20261031d"></script>
+    <script src="activity-data.js"></script>
+    <script src="media-data.js"></script>
+    <script src="media.js"></script>
+    <script src="home.js"></script>
   </body>
 </html>

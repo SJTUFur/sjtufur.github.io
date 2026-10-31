@@ -8,7 +8,37 @@
     storage = null;
   }
 
+  function preference(key) {
+    try { return storage?.getItem(key); } catch { return null; }
+  }
+
+  function savePreference(key, value) {
+    try { storage?.setItem(key, value); } catch { /* Theme selection still works without storage. */ }
+  }
+
+  const colors = { default: "原有配色", red: "交大红", blue: "蓝色" };
+  function preferredTheme() {
+    const saved = preference("site-theme");
+    return ["light", "dark"].includes(saved) ? saved : (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  }
+
+  function setColor(value) {
+    const color = Object.hasOwn(colors, value) ? value : "default";
+    root.dataset.color = color;
+    document.querySelectorAll('input[name="site-color"]').forEach((input) => {
+      input.checked = input.value === color;
+    });
+    const summary = document.querySelector("[data-color-picker] > summary");
+    if (summary) {
+      summary.setAttribute("aria-label", `选择颜色主题，当前：${colors[color]}`);
+      summary.title = `颜色主题：${colors[color]}`;
+    }
+    setTheme(preferredTheme());
+  }
+
   function setTheme(theme) {
+    const fixedDaytime = ["red", "blue"].includes(root.dataset.color);
+    if (fixedDaytime) theme = "light";
     root.dataset.theme = theme;
     const themeToggle = document.querySelector("[data-theme-toggle]");
     const themeLabel = document.querySelector("[data-theme-label]");
@@ -16,7 +46,12 @@
       themeLabel.textContent = theme === "dark" ? "日间模式" : "深夜模式";
     }
     if (themeToggle) {
+      themeToggle.hidden = fixedDaytime;
+      themeToggle.disabled = fixedDaytime;
       themeToggle.setAttribute("aria-pressed", String(theme === "dark"));
+      const label = theme === "dark" ? "切换日间模式" : "切换深色模式";
+      themeToggle.setAttribute("aria-label", label);
+      themeToggle.title = label;
     }
   }
 
@@ -30,14 +65,35 @@
 
   mountNav();
 
-  const savedTheme = storage?.getItem("site-theme");
-  const initialTheme = savedTheme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-  setTheme(initialTheme);
+  setColor(preference("site-color"));
+
+  const colorPicker = document.querySelector("[data-color-picker]");
+  document.querySelectorAll('input[name="site-color"]').forEach((input) => {
+    input.addEventListener("change", () => {
+      if (!input.checked) return;
+      setColor(input.value);
+      savePreference("site-color", input.value);
+    });
+  });
+  document.addEventListener("click", (event) => {
+    if (colorPicker && !colorPicker.contains(event.target)) colorPicker.open = false;
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && colorPicker?.open) {
+      colorPicker.open = false;
+      colorPicker.querySelector("summary").focus();
+    }
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key === "site-color") setColor(event.newValue);
+    if (event.key === "site-theme" && ["light", "dark"].includes(event.newValue)) setTheme(event.newValue);
+  });
 
   const themeToggle = document.querySelector("[data-theme-toggle]");
   themeToggle?.addEventListener("click", () => {
+    if (["red", "blue"].includes(root.dataset.color)) return;
     const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-    storage?.setItem("site-theme", nextTheme);
+    savePreference("site-theme", nextTheme);
     setTheme(nextTheme);
   });
 
@@ -46,11 +102,17 @@
   const submenuButton = document.querySelector(".has-submenu > button");
   const submenuParent = document.querySelector(".has-submenu");
 
+  colorPicker?.addEventListener("toggle", () => {
+    if (colorPicker.open && navMenu && navToggle) {
+      navMenu.classList.remove("is-open");
+      navToggle.setAttribute("aria-expanded", "false");
+    }
+  });
+
   const currentPage = document.body.dataset.page || "";
-  const aboutGroup = ["about", "mascot", "members"];
   document.querySelectorAll("[data-page-target]").forEach((item) => {
     const target = item.dataset.pageTarget;
-    const active = target === currentPage || (target === "about" && aboutGroup.includes(currentPage));
+    const active = target === currentPage;
     item.classList.toggle("is-current", active);
     if (item.tagName === "A") {
       if (active) {

@@ -33,7 +33,7 @@ jobs:
         run: hugo --minify --baseURL "${{ steps.pages.outputs.base_url }}/"
       - name: Assemble static site
         run: |
-          cp index.html about.html mascot.html members.html join.html announcements.html links.html gallery.html styles.css nav.js script.js -t hugo/public/
+          cp index.html about.html mascot.html members.html join.html announcements.html links.html gallery.html styles.css nav.js script.js members-data.js members.js join.js media-data.js media.js home.js -t hugo/public/
           cp -r assets hugo/public/
           touch hugo/public/.nojekyll
       - name: Upload artifact
