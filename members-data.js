@@ -39,10 +39,10 @@ window.SITE_MEMBERS = [
     "role": "技术部",
     "interests": "",
     "qq": "3225811332",
-    "avatar": "",
-    "description": "支持绘画、兽装和文创项目。",
-    "website": "",
-    "linkEnabled": false
+    "avatar": "assets/images/people/沙棘.jpg",
+    "description": "支持瑞皮喵，支持瑞皮謝謝喵～",
+    "website": "https://cyanneko.github.io/AstraWeb/",
+    "linkEnabled": true
   },
   {
     "name": "哇啦哇啦",
@@ -51,7 +51,7 @@ window.SITE_MEMBERS = [
     "interests": "",
     "qq": "84939469",
     "avatar": "assets/images/people/哇啦哇啦.png",
-    "description": "真想只有一个",
+    "description": "真相只有一个！束手就擒吧！",
     "website": "",
     "linkEnabled": false
   },
@@ -206,6 +206,28 @@ window.SITE_MEMBERS = [
     "qq": "2077199861",
     "avatar": "assets/images/people/E-lppa-7600044cab20.jpg",
     "description": "我有一些绝妙的简介词，可惜一句话写不下",
+    "website": "无须作答",
+    "linkEnabled": false
+  },
+  {
+    "name": "废豺",
+    "group": "community",
+    "role": "MC、UT/DR、音乐",
+    "interests": "",
+    "qq": "3907667286",
+    "avatar": "assets/images/people/废豺-9a8f813c32c9.png",
+    "description": "",
+    "website": "无须作答",
+    "linkEnabled": false
+  },
+  {
+    "name": "泠风",
+    "group": "community",
+    "role": "音游 调酒 数学（？",
+    "interests": "",
+    "qq": "2150742049",
+    "avatar": "assets/images/people/泠风-d6d7d0003743.jpg",
+    "description": "希望泠风可以让你的生活变得更美好一点～",
     "website": "无须作答",
     "linkEnabled": false
   }
